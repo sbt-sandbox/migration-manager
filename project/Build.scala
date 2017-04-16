@@ -31,15 +31,16 @@ object BuildSettings {
         else None
       },
       git.useGitDescribe := true,
-      licenses := Seq("Apache License v2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
+      licenses := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
       homepage := Some(url("http://github.com/typesafehub/migration-manager")),
       scalacOptions := Seq("-feature", "-deprecation", "-Xlint")
   )
 
-  def sbtPublishSettings: Seq[Def.Setting[_]] = Seq(
-    bintrayOrganization := Some("typesafe"),
-    bintrayRepository := "sbt-plugins",
-    bintrayReleaseOnPublish := false
+  def bintrayPublishSettings: Seq[Def.Setting[_]] = Seq(
+    bintrayOrganization := Some("sbt"),
+    bintrayRepository := "sbtsandbox1",
+    bintrayReleaseOnPublish := false,
+    bintrayPackage := "migration-manager"
   )
 
   def sonatypePublishSettings: Seq[Def.Setting[_]] = Seq(
@@ -109,7 +110,7 @@ object MimaBuild extends Build {
              host in upload := "downloads.typesafe.com.s3.amazonaws.com",
              testScalaVersion in Global :=  sys.props.getOrElse("mima.testScalaVersion", scalaVersion.value)
     )
-    enablePlugins(GitVersioning)
+    // enablePlugins(GitVersioning)
   )
 
   lazy val core = (
@@ -123,7 +124,7 @@ object MimaBuild extends Build {
            )
     settings(libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
              name := buildName + "-core")
-    settings(sonatypePublishSettings:_*)
+    settings(bintrayPublishSettings:_*)
   )
 
   val myAssemblySettings: Seq[Setting[_]] = (assemblySettings: Seq[Setting[_]]) ++ Seq(
@@ -147,7 +148,7 @@ object MimaBuild extends Build {
     settings(libraryDependencies += typesafeConfig,
              name := buildName + "-reporter")
     dependsOn(core)
-    settings(sonatypePublishSettings:_*)
+    settings(bintrayPublishSettings:_*)
     settings(myAssemblySettings:_*)
     settings(
       // add task functional-tests that depends on all functional tests
@@ -271,5 +272,5 @@ object MimaBuild extends Build {
       }
 
     def project(id: String, base: File, settings: Seq[Def.Setting[_]] = Nil) =
-      Project(id, base, settings = settings) disablePlugins(BintrayPlugin)
+      Project(id, base, settings = settings) // disablePlugins(BintrayPlugin)
 }
