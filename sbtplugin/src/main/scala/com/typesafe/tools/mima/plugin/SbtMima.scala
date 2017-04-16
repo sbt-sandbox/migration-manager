@@ -5,7 +5,8 @@ import com.typesafe.tools.mima.core.Config
 import com.typesafe.tools.mima.core.util.log.Logging
 import sbt.Keys.TaskStreams
 import sbt._
-
+import sbt.librarymanagement.{ UpdateConfiguration, ArtifactTypeFilter }
+import sbt.internal.librarymanagement.{ IvySbt, InlineConfiguration, IvyActions }
 import scala.tools.nsc.classpath.{AggregateClassPath, ClassPathFactory}
 import scala.util.Try
 
@@ -100,17 +101,19 @@ object SbtMima {
    *  for testing.
    */
   def getPreviousArtifact(m: ModuleID, ivy: IvySbt, s: TaskStreams): File = {
-    val moduleSettings = InlineConfiguration(
-      "dummy" % "test" % "version",
-      ModuleInfo("dummy-test-project-for-resolving"),
-      dependencies = Seq(m))
+    val moduleSettings: InlineConfiguration = InlineConfiguration(
+      validate = false, ivyScala = None,
+      module = "dummy" % "test" % "version",
+      moduleInfo = ModuleInfo("dummy-test-project-for-resolving"),
+      dependencies = Vector(m))
     val module = new ivy.Module(moduleSettings)
     val report = IvyActions.update(
       module,
-      new UpdateConfiguration(
+      UpdateConfiguration(
         retrieve = None,
         missingOk = false,
-        logging = UpdateLogging.DownloadOnly),
+        logging = UpdateLogging.DownloadOnly,
+        ArtifactTypeFilter.forbid(Set())),
       s.log)
     val optFile = (for {
       config <- report.configurations

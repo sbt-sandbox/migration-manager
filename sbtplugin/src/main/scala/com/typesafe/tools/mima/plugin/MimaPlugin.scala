@@ -62,7 +62,7 @@ object MimaPlugin extends AutoPlugin {
         // TODO - These should be better handled in sbt itself.
         // The cross version API is horribly intricately odd.
         CrossVersion(m, ivyScala.value) match {
-          case Some(f) => m.copy(name = f(m.name))
+          case Some(f) => m.withName(f(m.name))
           case None => m
         }
       } map { id =>

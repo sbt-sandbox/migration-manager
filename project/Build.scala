@@ -25,7 +25,7 @@ object BuildSettings {
 
   val commonSettings = Defaults.coreDefaultSettings ++ Seq (
       organization := buildOrganization,
-      scalaVersion := "2.10.6",
+      scalaVersion := "2.12.1",
       git.gitTagToVersionNumber := { tag: String =>
         if(tag matches "[0.9]+\\..*") Some(tag)
         else None
@@ -96,10 +96,11 @@ object MimaBuild extends Build {
 
   lazy val modules = Seq(core, reporter, sbtplugin)
 
-  lazy val root = (
+  lazy val root: Project = (
     project("root", file("."))
     aggregate(core, reporter, sbtplugin)
     settings(s3Settings:_*)
+    settings(version in ThisBuild := "0.1.14-sbtsandbox1")
     settings(name := buildName,
              publish := (),
              publishLocal := (),
@@ -159,16 +160,24 @@ object MimaBuild extends Build {
 
   lazy val sbtplugin = (
     Project("sbtplugin", file("sbtplugin"), settings = commonSettings)
-    settings(scriptedSettings)
+    // settings(scriptedSettings)
     settings(name := "sbt-mima-plugin",
-             sbtPlugin := true,
-             scriptedLaunchOpts := scriptedLaunchOpts.value :+ "-Dplugin.version=" + version.value,
-             scriptedBufferLog := false,
+             sbtPlugin := true
+             // scriptedLaunchOpts := scriptedLaunchOpts.value :+ "-Dplugin.version=" + version.value,
+             // scriptedBufferLog := false,
              // Scripted locally publishes sbt plugin and then runs test projects with locally published version.
              // Therefore we also need to locally publish dependent projects on scripted test run.
-             scripted <<= scripted dependsOn (publishLocal in core, publishLocal in reporter))
+             // scripted <<= scripted dependsOn (publishLocal in core, publishLocal in reporter)
+             )
     dependsOn(reporter)
-    settings(sbtPublishSettings:_*)
+    settings(bintrayPublishSettings:_*)
+    settings(
+      scalaVersion := "2.12.1",
+      sbtVersion in Global := "1.0.0-M4-LOCAL-20170415B",
+      scalaCompilerBridgeSource := {
+        ("org.scala-sbt" % "compiler-interface" % "0.13.15" % "component").sources
+      }
+    )
   )
 
   lazy val reporterFunctionalTests = project("reporter-functional-tests",
